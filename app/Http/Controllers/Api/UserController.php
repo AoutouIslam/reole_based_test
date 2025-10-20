@@ -60,14 +60,7 @@ class UserController extends Controller
     public function update(Request $request, string $id)
     {
 
-          $authUser = auth()->user();
-
-    // Check if the logged-in user is an admin
-    if (!$authUser || $authUser->role !== 'admin') {
-        return response()->json([
-            'message' => 'Forbidden: Only admin users can delete accounts.'
-        ], 403);
-    }
+       // removed the user check because the middleware is handeling it*
         $user = User::findOrFail($id);
 
         $validated = $request->validate([
@@ -94,15 +87,15 @@ class UserController extends Controller
      */
     public function destroy(string $id)
     {
-        
-          $authUser = auth()->user();
+        // removed this part because the middleware is handeling it 
+       //   $authUser = auth()->user();
 
     // Check if the logged-in user is an admin
-    if (!$authUser || $authUser->role !== 'admin') {
-        return response()->json([
-            'message' => 'Forbidden: Only admin users can delete accounts.'
-        ], 403);
-    }
+   // if (!$authUser || $authUser->hasRole('admin') ) {
+     //   return response()->json([
+       //     'message' => 'Forbidden: Only admin users can delete accounts.'
+       // ], 403);
+    //}
         $user = User::findOrFail($id);
         $user->delete();
 
