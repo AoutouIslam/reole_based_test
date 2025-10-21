@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
+use Illuminate\Support\Facades\Hash; 
 
 
 class UserController extends Controller
@@ -20,26 +23,26 @@ class UserController extends Controller
 
         $users = $query->paginate($perPage);
 
-        return response()->json($users);
+        return response()->json([
+            'success' => true,
+        'message' => 'Users retrieved successfully',
+            'data' => $users->toArray(),
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
-            'role_id' => ['required', 'exists:roles,id'],
-        ]);
+         $validated = $request->validated();
 
         $validated['password'] = Hash::make($validated['password']);
 
         $user = User::create($validated);
 
         return response()->json([
+            'success' => true,
             'message' => 'User created successfully',
             'data' => $user->load('role'),
         ], 201);
@@ -51,32 +54,34 @@ class UserController extends Controller
     public function show(string $id)
     {
         $user = User::with('role')->findOrFail($id);
-        return response()->json($user);
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'User retrieved successfully',
+                'data' => $user
+            ]
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateUserRequest $request, string $id)
     {
 
        // removed the user check because the middleware is handeling it*
         $user = User::findOrFail($id);
 
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => ['sometimes', 'required', 'email', Rule::unique('users')->ignore($user->id)],
-            'password' => 'nullable|string|min:6',
-            'role_id' => ['sometimes', 'exists:roles,id'],
-        ]);
+        $validated = $request->validated();
 
         if (!empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         }
-
+        
         $user->update($validated);
 
         return response()->json([
+            'success' => true,
             'message' => 'User updated successfully',
             'data' => $user->load('role'),
         ]);
@@ -99,6 +104,8 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $user->delete();
 
-        return response()->json(['message' => 'User deleted']);
+        return response()->json([
+            'success' => true,
+            'message' => 'User deleted']);
     }
 }
